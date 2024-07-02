@@ -45,6 +45,16 @@
 #include "keys.h"
 #include "pins.h"
 
+//row (top to bottom)
+pin_t d1 = {&PORTD, &PIND, 1};
+pin_t d0 = {&PORTD, &PIND, 0};
+pin_t d4 = {&PORTD, &PIND, 4};
+pin_t c6 = {&PORTC, &PINC, 6};
+//col (from right to left)
+pin_t b4 = {&PORTB, &PINB, 4};
+pin_t e6 = {&PORTE, &PINE, 6};
+pin_t d7 = {&PORTD, &PIND, 7};
+
 typedef struct {
   uint8_t num_rows;
   uint8_t num_cols;
@@ -56,10 +66,10 @@ typedef struct {
 matrix_t matrix;
 
 uint8_t layout[256] = {
-  K_Q, K_W, K_F, K_P, K_G, K_RESERVED,
-  K_A, K_R, K_S, K_T, K_D, K_RESERVED,
-  K_Z, K_X, K_C, K_V, K_B, K_LEFT_CONTROL,
-  K_ESCAPE, K_TAB, K_LEFT_GUI, K_LEFT_SHIFT, K_BACKSPACE, K_RESERVED
+  K_HOME, K_END, K_PAGE_UP,
+  K_END, K_INSERT, K_PAGE_DOWN,
+  K_I, K_UP_ARROW, K_L,
+  K_LEFT_ARROW, K_DOWN_ARROW, K_RIGHT_ARROW
 };
 
 void SetupHardware(void);

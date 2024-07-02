@@ -48,6 +48,51 @@ const USB_Descriptor_HIDReport_Datatype_t PROGMEM KeyboardReport[] =
 	/* Use the HID class driver's standard Keyboard report.
 	 *   Max simultaneous keys: 6
 	 */
+	// HID_RI_USAGE_PAGE(8, 0x01),                     \
+    // HID_RI_USAGE(8, 0x06),                          \
+    // HID_RI_COLLECTION(8, 0x01),                     \
+    //     /* Keyboard Report */                       \
+    //     HID_RI_USAGE_PAGE(8, 0x07),                 \
+    //     HID_RI_USAGE_MINIMUM(8, 0xE0),              \
+    //     HID_RI_USAGE_MAXIMUM(8, 0xE7),              \
+    //     HID_RI_LOGICAL_MINIMUM(8, 0x00),            \
+    //     HID_RI_LOGICAL_MAXIMUM(8, 0x01),            \
+    //     HID_RI_REPORT_SIZE(8, 0x01),                \
+    //     HID_RI_REPORT_COUNT(8, 0x08),               \
+    //     HID_RI_INPUT(8, HID_IOF_DATA | HID_IOF_VARIABLE | HID_IOF_ABSOLUTE), \
+    //     HID_RI_REPORT_COUNT(8, 0x01),               \
+    //     HID_RI_REPORT_SIZE(8, 0x08),                \
+    //     HID_RI_INPUT(8, HID_IOF_CONSTANT),          \
+    //     HID_RI_USAGE_PAGE(8, 0x08),                 \
+    //     HID_RI_USAGE_MINIMUM(8, 0x01),              \
+    //     HID_RI_USAGE_MAXIMUM(8, 0x05),              \
+    //     HID_RI_REPORT_COUNT(8, 0x05),               \
+    //     HID_RI_REPORT_SIZE(8, 0x01),                \
+    //     HID_RI_OUTPUT(8, HID_IOF_DATA | HID_IOF_VARIABLE | HID_IOF_ABSOLUTE | HID_IOF_NON_VOLATILE), \
+    //     HID_RI_REPORT_COUNT(8, 0x01),               \
+    //     HID_RI_REPORT_SIZE(8, 0x03),                \
+    //     HID_RI_OUTPUT(8, HID_IOF_CONSTANT),         \
+    //     HID_RI_LOGICAL_MINIMUM(8, 0x00),            \
+    //     HID_RI_LOGICAL_MAXIMUM(16, 0xFF),           \
+    //     HID_RI_USAGE_PAGE(8, 0x07),                 \
+    //     HID_RI_USAGE_MINIMUM(8, 0x00),              \
+    //     HID_RI_USAGE_MAXIMUM(8, 0xFF),              \
+    //     HID_RI_REPORT_COUNT(8, 6),            \
+    //     HID_RI_REPORT_SIZE(8, 0x08),                \
+    //     HID_RI_INPUT(8, HID_IOF_DATA | HID_IOF_ARRAY | HID_IOF_ABSOLUTE), \
+    //     /* Consumer Control Report */               \
+    //     HID_RI_USAGE_PAGE(8, 0x0C),                 \
+    //     HID_RI_USAGE(8, 0x01),                      \
+    //     HID_RI_COLLECTION(8, 0x01),                 \
+    //         HID_RI_LOGICAL_MINIMUM(8, 0x00),        \
+    //         HID_RI_LOGICAL_MAXIMUM(16, 0x03FF),     \
+    //         HID_RI_USAGE_MINIMUM(16, 0x0000),       \
+    //         HID_RI_USAGE_MAXIMUM(16, 0x03FF),       \
+    //         HID_RI_REPORT_COUNT(8, 0x01),           \
+    //         HID_RI_REPORT_SIZE(16, 16),             \
+    //         HID_RI_INPUT(8, HID_IOF_DATA | HID_IOF_ARRAY | HID_IOF_ABSOLUTE), \
+    //     HID_RI_END_COLLECTION(0),                   \
+    // HID_RI_END_COLLECTION(0)
 	HID_DESCRIPTOR_KEYBOARD(6)
 };
 
@@ -148,13 +193,13 @@ const USB_Descriptor_String_t PROGMEM LanguageString = USB_STRING_DESCRIPTOR_ARR
  *  form, and is read out upon request by the host when the appropriate string ID is requested, listed in the Device
  *  Descriptor.
  */
-const USB_Descriptor_String_t PROGMEM ManufacturerString = USB_STRING_DESCRIPTOR(L"Melissa Corp.");
+const USB_Descriptor_String_t PROGMEM ManufacturerString = USB_STRING_DESCRIPTOR(L"Irene");
 
 /** Product descriptor string. This is a Unicode string containing the product's details in human readable form,
  *  and is read out upon request by the host when the appropriate string ID is requested, listed in the Device
  *  Descriptor.
  */
-const USB_Descriptor_String_t PROGMEM ProductString = USB_STRING_DESCRIPTOR(L"Macropad");
+const USB_Descriptor_String_t PROGMEM ProductString = USB_STRING_DESCRIPTOR(L"Irene Macropad");
 
 /** This function is called by the library when in device mode, and must be overridden (see library "USB Descriptors"
  *  documentation) by the application code so that the address and size of a requested descriptor can be given

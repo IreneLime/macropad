@@ -51,20 +51,56 @@ USB_ClassInfo_HID_Device_t Keyboard_HID_Interface =
     },
   };
 
+void init(void) {
+  // Set LED pins as output
+  DDRD |= (1 << 5);  // PD5
+  DDRB |= (1 << 0);  // PB0
+
+  // Set encoder pins as input
+  DDRB &= ~(1 << 2);  // PB2
+  DDRB &= ~(1 << 6);  // PB6
+  DDRB &= ~(1 << 1); //PB1
+  DDRB &= ~(1 << 3); //PB3
+
+  // Enable pull-up resistors on encoder pins
+  // Set the state as high (pull-up) for encoder to register
+  PORTB |= (1 << 2);  // PB2
+  PORTB |= (1 << 6);  // PB6
+  PORTB |= (1 << 1);
+  PORTB |= (1 << 3);
+}
+
+// LED illumination on microcontroller
+// 5 v to power the LED
+// 0 V to shut off the LED
+void illuminate_right_led() {
+  PORTD |= (1 << 5);  // Turn off LED on PD5 
+  PORTB &= ~(1 << 0); // Turn on LED on PB0
+}
+
+void illuminate_left_led() {
+  PORTB |= (1 << 0);  // Turn off LED on PB0
+  PORTD &= ~(1 << 5); // Turn on LED on PD5
+}
+
+void leds_off(){
+    PORTB |= (1 << 0); //Turn off LED on PB0
+    PORTD |= (1 << 5); // Turn off LED on PD5
+}
 
 int main(void)
 {
 	SetupHardware();
 
 	GlobalInterruptEnable();
-
+	
 	// setup matrix
 	uint8_t num_rows = 4;
-	uint8_t num_cols = 6;
+	uint8_t num_cols = 3;
 	matrix.num_rows = num_rows;
 	matrix.num_cols = num_cols;
 	pin_t rows[4] = {d1, d0, d4, c6};
-	pin_t cols[6] =	{b2, b5, b4, e6, d7, b6};
+	pin_t cols[3] =	{d7, e6, b4};
 	for (int i = 0; i < num_rows; ++i) {
 	  matrix.rows[i] = rows[i];
 	}
@@ -77,21 +113,18 @@ int main(void)
 	DDRD |= _BV(0);
 	DDRD |= _BV(4);
 	DDRC |= _BV(6);
-	// enable pull-up on all rows
+	// enable pull-up (set state to digital high) on all rows
 	for (uint8_t i = 0; i < matrix.num_rows; ++i) {
 	  setPinHigh(matrix.rows[i]);
 	}
 	// set all columns as inputs
-	DDRB &= ~_BV(2); // B2
-	DDRB &= ~_BV(5); // B5
 	DDRB &= ~_BV(4); // B4
 	DDRE &= ~_BV(6); // E6
 	DDRD &= ~_BV(7); // D7
-	DDRB &= ~_BV(6); // B6
 	// enable pull-up on all columns
 	for (uint8_t i = 0; i < matrix.num_cols; ++i) {
 	  setPinHigh(matrix.cols[i]);
-	}
+	}	
 
 	// init encoder pins
 	DDRF &= ~(1 << 6); // F6 as input
@@ -99,14 +132,58 @@ int main(void)
 	DDRF &= ~(1 << 7); // F7 as input
 	PORTF |= (1 << 7); // F7 as high
 
+	init();
+    leds_off();
+
+    // Read initial state of PB2 (pin A rotary encoder 1), store in bit 0
+    uint8_t last_state = (PINB & (1<<2)) >> 2; //shift back 2 to put it in the least significant bit
+	uint8_t last_state_e2 = (PINB & (1<<1)) >> 1;
+
 	for (;;) {
-	  for (uint8_t i = 0; i < matrix.num_rows; ++i) {
-	    /* setPinLow(matrix.rows[i]); */
-	    /* matrix.active_col = i; */
-	    HID_Device_USBTask(&Keyboard_HID_Interface);
-	    USB_USBTask();
-	    /* setPinHigh(matrix.rows[i]); */
-	  }
+	    for (uint8_t i = 0; i < matrix.num_rows; ++i) {
+	        setPinLow(matrix.rows[i]);
+	        matrix.active_col = i;
+	        HID_Device_USBTask(&Keyboard_HID_Interface);
+	        USB_USBTask();
+	        setPinHigh(matrix.rows[i]);
+	    }
+
+		// Read current state of PB2, store in bit 0
+        uint8_t current_state = (PINB & (1<<2)) >> 2;
+		uint8_t current_state_e2 = (PINB & (1<<1)) >> 1;
+
+        //Check if the previous state == current state
+        if (current_state != last_state) {
+            // Check the state of the next pin (read current state of PB2, store in bit 0)
+            uint8_t current_b_state = (PINB & (1 << 6)) >> 6;
+
+            // If the same are the same -> counterclockwise
+            if (current_b_state == current_state) { //Compare bit 0
+                illuminate_left_led();
+            }
+            // If the states are not the same -> clockwise
+            else {
+                illuminate_right_led();
+            }
+        }
+
+		if (current_state_e2 != last_state_e2) {
+			uint8_t current_b_state_e2 = (PINB & (1 << 3)) >> 3;
+			// If the same are the same -> counterclockwise
+            if (current_b_state_e2 == current_state_e2) { //Compare bit 0
+                illuminate_right_led();
+            }
+            // If the states are not the same -> clockwise
+            else {
+                illuminate_left_led();
+            }
+		}
+		
+        // Push current state to last state to read a new current state next time
+        last_state = current_state;
+		last_state_e2 = current_state_e2;
+
+		// _delay_ms(10);
 	}
 }
 
@@ -181,25 +258,28 @@ bool CALLBACK_HID_Device_CreateHIDReport(USB_ClassInfo_HID_Device_t* const HIDIn
                                          uint16_t* const ReportSize)
 {
 	USB_KeyboardReport_Data_t* KeyboardReport = (USB_KeyboardReport_Data_t*)ReportData;
-
 	uint8_t UsedKeyCodes = 0;
-	uint8_t offset = matrix.active_col * matrix.num_cols;
-	// check columns one at a time to determine which key is pressed
-	/* for (uint8_t i = 0; i < matrix.num_cols; ++i) { */
-	/*   if (isPinLow(matrix.cols[i])) { */
-	/*     KeyboardReport->KeyCode[UsedKeyCodes++] = layout[i+offset]; */
-	/*   } */
-	/* } */
-
-	// encoder 1
+	uint8_t offset = matrix.active_col * matrix.num_cols; // Define where in the keyboard we send our keycode
+	// encoder 1 push button
 	if (!(PINF & (1 << 6))) {
-	  KeyboardReport->KeyCode[UsedKeyCodes++] = K_H;
-	} else if (!(PINF & (1 << 7))) {
+	  KeyboardReport->KeyCode[UsedKeyCodes++] = K_MEDIA_MUTE;
+	}
+	// encoder 2 push button
+	if (!(PINF & (1 << 7))) {
 	  KeyboardReport->KeyCode[UsedKeyCodes++] = K_I;
 	}
 
-	/* if (UsedKeyCodes) */
-	/*   KeyboardReport->Modifier = HID_KEYBOARD_MODIFIER_LEFTSHIFT; */
+	// check columns one at a time to determine which key is pressed
+	for (uint8_t i = 0; i < matrix.num_cols; ++i) {
+	  if (isPinLow(matrix.cols[i])) {
+		// if (KeyboardReport->KeyCode[UsedKeyCodes] != layout[i+offset])
+		// {
+	    	KeyboardReport->KeyCode[UsedKeyCodes++] = layout[i+offset];
+		// }
+	  }
+	}
+	//  if (UsedKeyCodes) 
+	//    KeyboardReport->Modifier = HID_KEYBOARD_MODIFIER_LEFTSHIFT; 
 
 	*ReportSize = sizeof(USB_KeyboardReport_Data_t);
 	return false;
