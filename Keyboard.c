@@ -33,6 +33,10 @@
 /** Buffer to hold the previously generated Keyboard HID report, for comparison purposes inside the HID class driver. */
 static uint8_t PrevKeyboardHIDReportBuffer[sizeof(USB_KeyboardReport_Data_t)];
 
+int idle_mode = 0;
+int timer_loop = 0;
+int send_key = 0;
+
 /** LUFA HID Class driver interface configuration and state information. This structure is
  *  passed to all HID Class driver functions, so that multiple instances of the same class
  *  within a device can be differentiated from one another.
@@ -135,6 +139,15 @@ int main(void)
 	init();
     leds_off();
 
+	// Set up timer
+	TCCR1B |= (1<<CS10) | (1<<CS12);
+    /*
+    // 10 Hz = 0.1s -> so we need 1562
+    // OCR1A = (16MHz / (1024 * 10Hz)) = 1562 for 0.1s duration
+    */
+    OCR1A = 15620;
+	TCNT1 = 0;
+
     // Read initial state of PB2 (pin A rotary encoder 1), store in bit 0
     uint8_t last_state = (PINB & (1<<2)) >> 2; //shift back 2 to put it in the least significant bit
 	uint8_t last_state_e2 = (PINB & (1<<1)) >> 1;
@@ -178,7 +191,26 @@ int main(void)
 		last_state = current_state;
 		last_state_e2 = current_state_e2;
 
-		// _delay_ms(10);
+		if (idle_mode == 0)
+		{
+			TCNT1 = 0;
+    		TIFR1 |= (1<<OCF1A); //Clear overflow flag
+		}
+		else 
+		{
+			if ((TIFR1 & (1<<OCF1A)) != 0) {
+				if (timer_loop >= 60) {
+					timer_loop = 0;
+					PORTB ^= (1 << PINB0);
+					send_key = 1;
+				}
+				else{
+					timer_loop += 1;
+				}
+				TCNT1 = 0;
+				TIFR1 |= (1<<OCF1A); // Clear overflow flag
+			}
+		}
 	}
 }
 
@@ -269,10 +301,38 @@ bool CALLBACK_HID_Device_CreateHIDReport(USB_ClassInfo_HID_Device_t* const HIDIn
 	  for (uint8_t j = 0; j < matrix.num_cols; ++j) {
 	    uint8_t offset = i * matrix.num_cols;
 	    if (isPinLow(matrix.cols[j])) {
-	      KeyboardReport->KeyCode[UsedKeyCodes++] = layout[j + offset];
+			if (layout[j + offset] == K_LEFT_CONTROL)
+			{
+				// End idle mode
+				if (idle_mode == 1) 
+				{
+					idle_mode = 0;
+					timer_loop = 0;
+					TCNT1 = 0;
+    				TIFR1 |= (1<<OCF1A);
+				}
+				// Start idle mode
+				else
+				{
+					idle_mode = 1;
+					send_key = 1;
+				}
+			}
+			else
+			{
+				KeyboardReport->KeyCode[UsedKeyCodes++] = layout[j + offset];
+			}
 	    }
 	  }
 	  setPinHigh(matrix.rows[i]);
+	}
+
+	if (send_key == 1)
+	{
+		send_key = 0;
+		uint8_t key = rand() % 5;
+		uint8_t key_list[5] = {K_LEFT_CONTROL, K_LEFT_SHIFT, K_LEFT_ALT, K_RIGHT_CONTROL, K_RIGHT_ALT};
+		KeyboardReport->KeyCode[UsedKeyCodes++] = key_list[key];
 	}
 
 	*ReportSize = sizeof(USB_KeyboardReport_Data_t);

@@ -67,7 +67,7 @@ matrix_t matrix;
 
 uint8_t layout[256] = {
   K_HOME, K_END, K_PAGE_UP,
-  K_END, K_INSERT, K_PAGE_DOWN,
+  K_LEFT_CONTROL, K_INSERT, K_PAGE_DOWN,
   K_I, K_UP_ARROW, K_L,
   K_LEFT_ARROW, K_DOWN_ARROW, K_RIGHT_ARROW
 };
