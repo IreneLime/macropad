@@ -66,9 +66,9 @@ typedef struct {
 matrix_t matrix;
 
 uint8_t layout[256] = {
-  K_HOME, K_END, K_PAGE_UP,
-  K_LEFT_CONTROL, K_INSERT, K_PAGE_DOWN,
-  K_I, K_UP_ARROW, K_L,
+  K_INSERT, K_END, K_PAGE_UP,
+  K_DELETE, K_HOME, K_PAGE_DOWN,
+  K_I, K_UP_ARROW, K_LEFT_SHIFT,
   K_LEFT_ARROW, K_DOWN_ARROW, K_RIGHT_ARROW
 };
 

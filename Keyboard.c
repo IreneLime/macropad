@@ -301,7 +301,7 @@ bool CALLBACK_HID_Device_CreateHIDReport(USB_ClassInfo_HID_Device_t* const HIDIn
 	  for (uint8_t j = 0; j < matrix.num_cols; ++j) {
 	    uint8_t offset = i * matrix.num_cols;
 	    if (isPinLow(matrix.cols[j])) {
-			if (layout[j + offset] == K_LEFT_CONTROL)
+			if (layout[j + offset] == K_I)
 			{
 				// End idle mode
 				if (idle_mode == 1) 
